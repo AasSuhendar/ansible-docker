@@ -13,5 +13,5 @@ See deployment for notes on how to deploy the project on a live system.
 
 Run playbook
 ```sh
-ansible-playbook config.yml
+ansible-playbook site.yml
 ```
