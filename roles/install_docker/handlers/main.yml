@@ -1,0 +1,6 @@
+---
+- name: Restart Service Docker
+  service:
+    name: docker
+    state: restarted
+  listen: "restart docker services"

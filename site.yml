@@ -1,0 +1,10 @@
+---
+- hosts: servers
+  any_errors_fatal: true
+  roles:
+  - role: common
+
+- hosts: servers
+  any_errors_fatal: true
+  roles:
+  - role: install_docker

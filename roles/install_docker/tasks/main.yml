@@ -1,0 +1,72 @@
+---
+- name: Add Docker s official GPG key
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+  tags:
+    - docker
+
+- name: Verify that we have the key with the fingerprint
+  apt_key:
+    id: 0EBFCD88
+    state: present
+  tags:
+    - docker
+
+- name: Save the current Ubuntu release version into a variable
+  shell: lsb_release -cs
+  register: ubuntu_version
+
+- name: Set up the stable repository
+  apt_repository:
+    repo: deb [arch=amd64] https://download.docker.com/linux/{{ansible_distribution|lower}} {{ansible_distribution_release}} stable
+    state: present
+    # update_cache: yes
+  tags:
+    - docker
+
+- name: Update apt packages
+  apt:
+    update_cache: yes
+    force_apt_get: "yes"
+  tags:
+    - docker
+
+- name: Install Docker
+  apt:
+    name: ['docker-ce', 'docker-ce-cli', 'containerd.io']
+    state: present
+    update_cache: "yes"
+    force_apt_get: "yes"
+
+- name: Test Docker Info
+  shell: "docker info"
+  register: docker_info
+
+- name: Show output of docker info
+  debug:
+    msg: "Docker Info Output: {{docker_info.stdout}}"
+
+- name: Add remote "{{ username_vm }}" user to "docker" group
+  user:
+    name: "{{ username_vm }}"
+    group: "docker"
+    append: yes
+  tags:
+    - docker
+
+- name: Install docker-compose
+  shell: curl -L "https://github.com/docker/compose/releases/download/1.24.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose && chmod +x /usr/local/bin/docker-compose && ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+  ignore_errors: yes
+
+- name: Test Docker Compose version
+  shell: "docker-compose --version"
+  register: docker_compose_info
+
+- name: Show output of docker-compose version
+  debug:
+    msg: "Docker Compose version : {{docker_compose_info.stdout}}"
+
+- name: Restart Docker Service
+  command: echo "this task will restart docker services"
+  notify: "restart docker services"
