@@ -2,7 +2,7 @@
 - name: Upgrade Operating System
   apt:
     force_apt_get: yes
-    # update_cache: yes
+    update_cache: yes
     upgrade: full
   register: os_upgrade_info
 
