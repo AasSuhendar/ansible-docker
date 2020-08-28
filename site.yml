@@ -3,8 +3,16 @@
   any_errors_fatal: true
   roles:
   - role: common
+    when: task == 'install'
 
 - hosts: servers
   any_errors_fatal: true
   roles:
   - role: install_docker
+    when: task == 'install'
+
+- hosts: servers
+  any_errors_fatal: true
+  roles:
+  - role: uninstall_docker
+    when: task == 'uninstall'
