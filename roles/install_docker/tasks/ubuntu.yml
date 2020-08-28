@@ -46,7 +46,7 @@
     append: yes
 
 - name: Install docker-compose
-  shell: curl -L "https://github.com/docker/compose/releases/download/1.24.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose && chmod +x /usr/local/bin/docker-compose && ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+  shell: curl -L "https://github.com/docker/compose/releases/download/1.24.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose && chmod +x /usr/local/bin/docker-compose
   ignore_errors: yes
 
 - name: Test Docker Compose version
@@ -56,6 +56,14 @@
 - name: Show output of docker-compose version
   debug:
     msg: "Docker Compose version : {{docker_compose_info.stdout}}"
+
+- name: Generate file daemon.json for Docker Config
+  template:
+    src: daemon.json.j2
+    dest: /etc/docker/daemon.json
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
 
 - name: Restart Docker Service
   command: echo "this task will restart docker services"

@@ -24,15 +24,16 @@
 
 - name: Install Required Packages
   apt:
-    name: "{{ item }}"
+    # name: "{{ item }}"
+    name: ['ca-certificates', 'apt-transport-https', 'software-properties-common', 'curl', 'wget', 'rsync']
     force_apt_get: yes
     update_cache: yes
     dpkg_options: "force-confdef,force-confold,force-confmiss"
     state: present
-  with_items:
-    - ca-certificates
-    - apt-transport-https
-    - software-properties-common
-    - curl
-    - wget
-    - rsync
+  # with_items:
+  #   - ca-certificates
+  #   - apt-transport-https
+  #   - software-properties-common
+  #   - curl
+  #   - wget
+  #   - rsync
