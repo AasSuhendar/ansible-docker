@@ -31,6 +31,12 @@
     update_cache: "yes"
     force_apt_get: "yes"
 
+- name: Ensure Docker is started and enabled at boot.
+  service:
+    name: docker
+    state: started
+    enabled: true
+
 - name: Test Docker Info
   shell: "docker info"
   register: docker_info
@@ -45,8 +51,20 @@
     group: "docker"
     append: yes
 
+- name: Check current docker-compose version.
+  command: docker-compose --version
+  register: docker_compose_current_version
+  changed_when: false
+  failed_when: false
+
+- name: Delete existing docker-compose version if it's different.
+  file:
+    path: "{{ docker_compose_path }}"
+    state: absent
+  when: docker_compose_current_version.stdout is defined and docker_compose_version not in docker_compose_current_version.stdout
+
 - name: Install docker-compose
-  shell: curl -L "https://github.com/docker/compose/releases/download/1.24.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose && chmod +x /usr/local/bin/docker-compose
+  shell: curl -L "https://github.com/docker/compose/releases/download/{{ docker_compose_version }}/docker-compose-$(uname -s)-$(uname -m)" -o {{ docker_compose_path }} && chmod +x {{ docker_compose_path }}
   ignore_errors: yes
 
 - name: Test Docker Compose version
