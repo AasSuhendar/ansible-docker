@@ -1,3 +1,6 @@
 ---
 - include: ubuntu.yml
   when: ansible_facts['os_family'] == "Debian" and ansible_facts['distribution'] == 'Ubuntu'
+
+- include: centos.yml
+  when: ansible_facts['os_family'] == "RedHat" and ansible_facts['distribution'] == 'CentOS'

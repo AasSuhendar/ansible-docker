@@ -1,81 +1,80 @@
 ---
-- name: Add Docker s official GPG key
+- name: UBUNTU - Add Docker official GPG key
   apt_key:
     url: https://download.docker.com/linux/ubuntu/gpg
     state: present
 
-- name: Verify that we have the key with the fingerprint
+- name: UBUNTU - Verify that we have the key with the fingerprint
   apt_key:
     id: 0EBFCD88
     state: present
 
-- name: Save the current Ubuntu release version into a variable
+- name: UBUNTU - Save the current Ubuntu release version into a variable
   shell: lsb_release -cs
   register: ubuntu_version
 
-- name: Set up the stable repository
+- name: UBUNTU - Set up the stable repository
   apt_repository:
     repo: deb [arch=amd64] https://download.docker.com/linux/{{ansible_distribution|lower}} {{ansible_distribution_release}} stable
     state: present
-    # update_cache: yes
 
-- name: Update apt packages
+- name: UBUNTU - Update apt packages
   apt:
     update_cache: yes
     force_apt_get: "yes"
 
-- name: Install Docker
+- name: UBUNTU - Install Docker
   apt:
     name: ['docker-ce', 'docker-ce-cli', 'containerd.io']
     state: present
     update_cache: "yes"
     force_apt_get: "yes"
 
-- name: Ensure Docker is started and enabled at boot.
+- name: UBUNTU - Ensure Docker is started and enabled at boot.
   service:
     name: docker
     state: started
     enabled: true
 
-- name: Test Docker Info
+- name: UBUNTU - Test Docker Info
   shell: "docker info"
   register: docker_info
 
-- name: Show output of docker info
+- name: UBUNTU - Show output of docker info
   debug:
     msg: "Docker Info Output: {{docker_info.stdout}}"
 
-- name: Add remote "{{ username_vm }}" user to "docker" group
+- name: UBUNTU - Add remote "{{ username_vm }}" user to "docker" group
   user:
     name: "{{ username_vm }}"
     group: "docker"
     append: yes
 
-- name: Check current docker-compose version.
+- name: UBUNTU - Check current docker-compose version.
   command: docker-compose --version
   register: docker_compose_current_version
   changed_when: false
   failed_when: false
 
-- name: Delete existing docker-compose version if it's different.
+- name: UBUNTU - Delete existing docker-compose version if it's different.
   file:
     path: "{{ docker_compose_path }}"
     state: absent
   when: docker_compose_current_version.stdout is defined and docker_compose_version not in docker_compose_current_version.stdout
 
-- name: Install docker-compose
+- name: UBUNTU - Install docker-compose
   shell: curl -L "https://github.com/docker/compose/releases/download/{{ docker_compose_version }}/docker-compose-$(uname -s)-$(uname -m)" -o {{ docker_compose_path }} && chmod +x {{ docker_compose_path }}
   ignore_errors: yes
 
-- name: Test Docker Compose version
+- name: UBUNTU - Test Docker Compose version
   shell: "docker-compose --version"
   register: docker_compose_info
 
-- name: Show output of docker-compose version
+- name: UBUNTU - Show output of docker-compose version
   debug:
     msg: "Docker Compose version : {{docker_compose_info.stdout}}"
 
-- name: Generate file daemon.json for Docker Config
+- name: UBUNTU - Generate file daemon.json for Docker Config
   template:
     src: daemon.json.j2
     dest: /etc/docker/daemon.json
@@ -83,6 +82,6 @@
     group: root
     mode: u=rw,g=r,o=r
 
-- name: Restart Docker Service
+- name: UBUNTU - Restart Docker Service
   command: echo "this task will restart docker services"
   notify: "restart docker services"

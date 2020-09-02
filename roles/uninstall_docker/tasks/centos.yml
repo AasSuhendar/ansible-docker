@@ -1,0 +1,27 @@
+---
+- name: CENTOS - Uninstall Docker
+  yum:
+    name: ['docker-ce', 'docker-ce-cli', 'containerd.io']
+    state: absent
+
+- name: CENTOS - Remove dependencies that are no longer required
+  yum:
+    autoremove: yes
+
+- name: CENTOS - Remove docker-compose
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - /usr/local/bin/docker-compose
+    - /usr/bin/docker-compose
+
+- name: CENTOS - Remove all file in /var/lib/docker
+  file:
+    path: /var/lib/docker
+    state: absent
+
+- name: CENTOS - Remove all file in /etc/docker
+  file:
+    path: /etc/docker
+    state: absent

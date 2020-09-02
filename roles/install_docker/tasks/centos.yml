@@ -1,0 +1,96 @@
+---
+- name: CENTOS - Add Docker official GPG key.
+  rpm_key:
+    key: "{{ docker_yum_gpg_key }}"
+    state: present
+
+- name: CENTOS - Add Docker repository.
+  get_url:
+    url: "{{ docker_yum_repo_url }}"
+    dest: '/etc/yum.repos.d/docker-{{ docker_edition }}.repo'
+    owner: root
+    group: root
+    mode: 0644
+
+- name: CENTOS - Configure Docker Edge repo.
+  ini_file:
+    dest: '/etc/yum.repos.d/docker-{{ docker_edition }}.repo'
+    section: 'docker-{{ docker_edition }}-edge'
+    option: enabled
+    value: '{{ docker_yum_repo_enable_edge }}'
+    mode: 0644
+
+- name: CENTOS - Configure Docker Test repo.
+  ini_file:
+    dest: '/etc/yum.repos.d/docker-{{ docker_edition }}.repo'
+    section: 'docker-{{ docker_edition }}-test'
+    option: enabled
+    value: '{{ docker_yum_repo_enable_test }}'
+    mode: 0644
+
+- name: CENTOS - Install Docker
+  yum:
+    name: ["docker-ce", "docker-ce-cli", "containerd.io"]
+    state: latest
+
+- name: CENTOS - Ensure Docker is started and enabled at boot.
+  service:
+    name: docker
+    state: started
+    enabled: true
+
+- name: CENTOS - Test Docker Info
+  shell: "docker info"
+  register: docker_info
+
+- name: CENTOS - Show output of docker info
+  debug:
+    msg: "Docker Info Output: {{docker_info.stdout}}"
+
+- name: CENTOS - Add remote "{{ username_vm }}" user to "docker" group
+  user:
+    name: "{{ username_vm }}"
+    group: "docker"
+    append: yes
+
+- name: CENTOS - Check current docker-compose version.
+  command: docker-compose --version
+  register: docker_compose_current_version
+  changed_when: false
+  failed_when: false
+
+- name: CENTOS - Delete existing docker-compose version if it's different.
+  file:
+    path: "{{ docker_compose_path }}"
+    state: absent
+  when: docker_compose_current_version.stdout is defined and docker_compose_version not in docker_compose_current_version.stdout
+
+- name: CENTOS - Install docker-compose
+  shell: curl -L "https://github.com/docker/compose/releases/download/{{ docker_compose_version }}/docker-compose-$(uname -s)-$(uname -m)" -o {{ docker_compose_path }} && chmod +x {{ docker_compose_path }}
+  ignore_errors: yes
+
+- name: CENTOS - Create symbolic link docker-compos
+  file:
+    src: "{{ docker_compose_path }}"
+    dest: "/usr/bin/docker-compose"
+    state: link
+
+- name: CENTOS - Test Docker Compose version
+  shell: "docker-compose --version"
+  register: docker_compose_info
+
+- name: CENTOS - Show output of docker-compose version
+  debug:
+    msg: "Docker Compose version : {{docker_compose_info.stdout}}"
+
+- name: CENTOS - Generate file daemon.json for Docker Config
+  template:
+    src: daemon.json.j2
+    dest: /etc/docker/daemon.json
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+
+- name: CENTOS - Restart Docker Service
+  command: echo "this task will restart docker services"
+  notify: "restart docker services"
